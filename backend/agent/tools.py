@@ -14,8 +14,6 @@ from backend.core.config import get_settings
 class SearchTool:
     """
     搜索工具
-    面试考点：RAG 里为什么需要搜索而不仅是向量检索？
-    答：向量检索适合已知文档集，搜索适合获取最新/外部信息；两者互补
     """
 
     def __init__(self):
@@ -104,8 +102,6 @@ class BrowserTool:
     async def fetch(self, url: str) -> Optional[str]:
         """
         获取网页并提取正文
-        面试考点：网页解析的难点是什么？
-        答：反爬、动态渲染（JS）、正文抽取（去广告/导航栏）、编码问题
         """
         try:
             resp = await self.client.get(url)

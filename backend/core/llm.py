@@ -66,8 +66,6 @@ class LLMClient:
     ) -> AsyncIterator[str]:
         """
         流式对话接口（SSE 用）
-        面试常考点：流式输出如何减少用户等待时间？
-        答：首字延迟（TTFT）远小于整段生成时间，用户感知更快
         """
         url = f"{self.base_url}/chat/completions"
         headers = {

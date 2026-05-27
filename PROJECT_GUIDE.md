@@ -36,9 +36,6 @@
 - `SearchResult.credibility_score` 用 `Field(ge=0.0, le=1.0)` 做数值范围校验，体现 Pydantic v2 的校验能力。
 - `ProgressUpdate.report_data` 为可选字段，只在 `completed` 状态时携带完整报告，避免每步都传输大量数据。
 
-**面试考点**：为什么用 Pydantic 而不是字典？
-- 答：类型安全、自动生成 API 文档、请求参数自动校验、IDE 补全友好。
-
 ---
 
 ### 2. `backend/core/config.py` —— 配置管理
@@ -60,9 +57,6 @@ class Settings(BaseSettings):
 **设计要点**：
 - `lru_cache()` 包装 `get_settings()`，避免重复读取文件。
 - 默认值设计：没有 Key 时程序能启动（虽然会报错），方便新人 clone 下来先跑通结构。
-
-**面试考点**：敏感信息（API Key）怎么管理？
-- 答：不硬编码，用环境变量 + `.env` 文件；`.env` 已加入 `.gitignore`（应检查），防止误提交到 GitHub。
 
 ---
 
@@ -96,9 +90,6 @@ headers = {
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 ```
 - 这行让 `http://localhost:8000/` 直接返回前端页面，前后端一体化运行。
-
-**面试考点**：为什么选 SSE 而不是 WebSocket？
-- 答：SSE 是单向服务器推送，基于 HTTP，更简单、自动重连、兼容性好；WebSocket 适合双向高频通信，这里只需要服务器推进度，SSE 足够。
 
 ---
 
@@ -146,9 +137,6 @@ app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 - 逻辑与 `run()` 完全一致，但在每个关键节点 `yield ProgressUpdate(...)`，让前端实时看到进度。
 - `await asyncio.sleep(0.3)` 故意留一点延迟，让前端动画更自然。
 
-**面试考点**：ReAct 和 Plan-and-Solve 的区别？
-- 答：Plan-and-Solve 是先规划再执行，计划不变；ReAct 是边执行边思考，每步都可能调整下一步行动。本项目是两者结合：先用 Planner 生成大纲（Plan-and-Solve），再在大纲内做 ReAct 循环。
-
 ---
 
 ### 5. `backend/agent/planner.py` —— 自适应规划器
@@ -170,9 +158,6 @@ app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
   2. 提取 markdown 代码块；
   3. 按行分割，过滤无效字符；
   4. 最终兜底用默认三步计划。
-
-**面试考点**：为什么需要自适应深度？
-- 答：固定步骤会导致简单问题过度搜索（浪费 token、时间），复杂问题搜索不足（报告浅显）。自适应能根据问题动态调整，冗余搜索减少约 30%。
 
 ---
 
@@ -209,9 +194,6 @@ def _trim_if_needed(self):
 ```
 - 超过 50 条时，把早期记忆压缩成一条摘要，保留最近细节。**这是分层记忆策略的简化实现。**
 
-**面试考点**：AI Agent 的记忆机制有哪些？
-- 答：短期记忆（如本项目的 Working Memory）、长期记忆（向量数据库+知识图谱）、实体记忆（关键信息提取）、反思记忆（自我总结）。本项目实现了短期记忆 + 摘要压缩。
-
 ---
 
 ## 第三轮：工具与基础设施
@@ -244,9 +226,6 @@ def _trim_if_needed(self):
   - 内容长度适中（500~5000 字）+0.1。
 - **为什么是规则而不是 LLM 打分？** 规则快、成本低、可解释；LLM 打分更准但更慢更贵。这里是权衡后的选择。
 
-**面试考点**：RAG 里为什么需要搜索而不仅是向量检索？
-- 答：向量检索适合已知文档集，搜索适合获取最新/外部信息；两者互补。本项目用搜索获取实时外部信息。
-
 ---
 
 ### 8. `backend/core/llm.py` —— LLM 客户端
@@ -256,7 +235,7 @@ def _trim_if_needed(self):
 **为什么不直接用 `openai` SDK？**
 - 展示自己封装 HTTP 的能力；
 - 更容易控制重试、日志、多厂商适配；
-- 减少黑盒依赖，面试时能讲清楚底层通信。
+- 减少黑盒依赖，降低外部依赖风险。
 
 **两个方法**：
 
@@ -279,9 +258,6 @@ async def get_llm_client() -> LLMClient:
     return _llm_client
 ```
 - 避免重复创建 HTTP 连接池，提升性能。
-
-**面试考点**：temperature 怎么选？
-- 答：低 temperature（0.1~0.3）适合确定性任务（分类、JSON 生成、决策），高 temperature（0.7+）适合创造性任务（写作、头脑风暴）。Agent 的思考环节要稳定，所以用低温；报告生成需要一定文采，所以用中温。
 
 ---
 
@@ -311,9 +287,6 @@ async def get_llm_client() -> LLMClient:
 - **简易 Markdown 转 HTML**：用正则替换 `#`、`**`、`*`、`` ` ``、`>`、`-` 等语法。
 - 冲突信息用黄色警告框展示。
 - 来源列表带可信度百分比。
-
-**面试考点**：SSE 和 WebSocket 的前端区别？
-- 答：SSE 基于 HTTP，自动处理重连，前端用 `EventSource` 或 `fetch + ReadableStream`；WebSocket 需要手动管理连接状态、心跳、重连逻辑。本项目是单向推送，SSE 更轻量。
 
 ---
 
@@ -356,11 +329,11 @@ ReActResearchAgent.run_stream()
  5-10 min | 读 react_loop.py，同时打断点跑一遍 | 理解 ReAct 主循环的每一步 |
 10-20 min | 读 planner.py + memory.py + tools.py | 理解每个模块的职责和交互 |
 20-25 min | 读 llm.py + frontend/index.html | 补齐通信和展示层 |
-25-30 min | 回头看 react_loop.py，对照架构图 | 建立全局认知，准备面试讲解 |
+25-30 min | 回头看 react_loop.py，对照架构图 | 建立全局认知，理解整体架构 |
 
 ---
 
-## 扩展思考（面试加分项）
+## 扩展思考
 
 读完源码后可以思考这些问题，展示你对项目的深度理解：
 

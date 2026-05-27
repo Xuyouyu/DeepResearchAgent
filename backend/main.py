@@ -2,9 +2,6 @@
 FastAPI 主入口
 提供 REST API 和 SSE 流式接口
 
-面试考点：为什么选 FastAPI 而不是 Flask/Django？
-答：FastAPI 原生支持异步（async/await），基于 Starlette 和 Pydantic，
-    自动 API 文档（Swagger/ReDoc），类型提示友好，性能接近 Go/Node.js
 """
 import json
 import uuid
@@ -79,8 +76,6 @@ async def create_research_stream(request: ResearchRequest):
     前端通过 EventSource 接收实时进度
     Content-Type: text/event-stream
 
-    面试考点：SSE 的数据格式是什么样的？
-    答：每条消息以 "data: {...}\n\n" 格式发送，浏览器 EventSource 自动解析
     """
     task_id = str(uuid.uuid4())[:8]
     agent = ReActResearchAgent()

@@ -1,8 +1,5 @@
 """
 Agent 记忆管理模块
-面试高频问题：AI Agent 的记忆机制有哪些？
-答：短期记忆（对话上下文/Working Memory）、长期记忆（向量数据库+知识图谱）、
-    实体记忆（关键信息提取）、反思记忆（自我总结）
 
 本模块实现了短期工作记忆 + 关键发现持久化
 """
@@ -61,8 +58,6 @@ class WorkingMemory:
     def get_context_for_llm(self, limit: int = 10) -> str:
         """
         将工作记忆压缩成文本，供 LLM 作为上下文使用
-        面试考点：上下文窗口有限时如何处理长记忆？
-        答：摘要压缩（Map-Reduce）、关键信息提取、分层记忆
         """
         recent_thoughts = self.thoughts[-limit:]
         context_parts = [

@@ -2,14 +2,6 @@
 任务规划器（Planner）
 实现自适应深度规划（创新点）：根据问题复杂度动态调整调研步骤数
 
-面试考点：AI Agent 的规划能力有哪些实现方式？
-答：
-1. 单步规划（Zero-shot）：直接生成完整计划，不调整
-2. ReAct：边做边规划，每步重新思考
-3. Plan-and-Solve：先规划再执行，适合确定性任务
-4. Tree of Thoughts（ToT）：多路径探索，适合开放性问题
-5. LLM+P（LLM+ classical Planner）：用 LLM 做高层规划，传统算法做底层调度
-
 本模块采用 Plan-and-Solve + 自适应深度
 """
 import json

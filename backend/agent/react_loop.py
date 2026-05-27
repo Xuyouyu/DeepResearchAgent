@@ -2,8 +2,6 @@
 ReAct 核心循环
 ReAct = Reasoning + Acting，论文来自 Princeton & Google (2022)
 核心思想：LLM 交替进行 思考(Thought) -> 行动(Action) -> 观察(Observation)
-
-这是 Agent 的"大脑"，面试时最可能被深挖的模块。
 """
 import asyncio
 import uuid
@@ -110,9 +108,6 @@ class ReActResearchAgent:
     ) -> AsyncIterator[ProgressUpdate]:
         """
         流式执行调研流程（SSE 用）
-        面试考点：为什么用 SSE 而不是 WebSocket？
-        答：SSE 是单向服务器推送，基于 HTTP，更简单、自动重连、兼容性好；
-            WebSocket 适合双向高频通信，这里只需要服务器推进度，SSE 足够
         """
         task_id = task_id or str(uuid.uuid4())[:8]
         memory = WorkingMemory(query=request.query)
