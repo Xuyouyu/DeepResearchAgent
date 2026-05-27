@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Research Agent</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        header p { color: #64748b; }
+
+        .input-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 12px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .progress-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+            display: none;
+        }
+        .progress-card.active { display: block; }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #7c3aed);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        .log {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: "Courier New", monospace;
+            font-size: 0.85rem;
+        }
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .log-entry:last-child { border-bottom: none; }
+
+        .report-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .report-card.active { display: block; }
+        .report-card h2 {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+        .report-content {
+            line-height: 1.8;
+        }
+        .report-content h1, .report-content h2, .report-content h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        .report-content p { margin-bottom: 12px; }
+        .report-content ul, .report-content ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+        .report-content blockquote {
+            border-left: 4px solid var(--primary);
+            padding-left: 16px;
+            color: #475569;
+            margin: 12px 0;
+        }
+        .sources {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .source-item {
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+        .source-item a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .conflict-alert {
+            background: #fef3c7;
+            border-left: 4px solid var(--warning);
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Deep Research Agent</h1>
+            <p>基于 ReAct 架构的自适应深度调研 Agent</p>
+        </header>
+
+        <div class="input-card">
+            <div class="form-group">
+                <label for="query">调研主题</label>
+                <input type="text" id="query" placeholder="例如：2025年AI Agent记忆机制的技术演进与商业落地分析">
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    <label for="depth">调研深度</label>
+                    <select id="depth">
+                        <option value="auto" selected>自动（根据主题复杂度自适应）</option>
+                        <option value="shallow">浅层（3步，适合简单查询）</option>
+                        <option value="medium">中等（5步，适合综合分析）</option>
+                        <option value="deep">深度（7步+，适合行业调研）</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="language">语言</label>
+                    <select id="language">
+                        <option value="zh" selected>中文</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button id="startBtn" onclick="startResearch()">开始调研</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="progress-card" id="progressCard">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong id="statusText">准备中...</strong>
+                <span id="stepText">0 / 0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="log" id="log"></div>
+        </div>
+
+        <div class="report-card" id="reportCard">
+            <h2>调研报告</h2>
+            <div id="conflicts"></div>
+            <div class="report-content" id="reportContent"></div>
+            <div class="sources" id="sources"></div>
+        </div>
+    </div>
+
+    <script>
+        // 配置 API 地址
+        const API_BASE = "http://localhost:8000";
+
+        function startResearch() {
+            const query = document.getElementById('query').value.trim();
+            if (!query) {
+                alert('请输入调研主题');
+                return;
+            }
+
+            const depth = document.getElementById('depth').value;
+            const language = document.getElementById('language').value;
+            const btn = document.getElementById('startBtn');
+            const progressCard = document.getElementById('progressCard');
+            const reportCard = document.getElementById('reportCard');
+            const log = document.getElementById('log');
+
+            btn.disabled = true;
+            progressCard.classList.add('active');
+            reportCard.classList.remove('active');
+            log.innerHTML = '';
+
+            const payload = JSON.stringify({ query, depth, language });
+
+            // 使用 EventSource 接收 SSE（注意：POST + SSE 需要用 fetch + ReadableStream，
+            // 原生 EventSource 只支持 GET，这里用 fetch 手动解析 SSE）
+            fetch(`${API_BASE}/api/research/stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: payload
+            }).then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                function read() {
+                    reader.read().then(({ done, value }) => {
+                        if (done) {
+                            btn.disabled = false;
+                            return;
+                        }
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n\n');
+                        buffer = lines.pop(); // 保留未完整部分
+
+                        lines.forEach(line => {
+                            if (line.startsWith('data: ')) {
+                                const data = JSON.parse(line.slice(6));
+                                handleUpdate(data);
+                            }
+                        });
+                        read();
+                    });
+                }
+                read();
+            }).catch(err => {
+                alert('请求失败: ' + err.message);
+                btn.disabled = false;
+            });
+        }
+
+        function handleUpdate(data) {
+            const statusText = document.getElementById('statusText');
+            const stepText = document.getElementById('stepText');
+            const progressFill = document.getElementById('progressFill');
+            const log = document.getElementById('log');
+
+            const statusMap = {
+                'pending': '等待中',
+                'planning': '规划任务',
+                'searching': '搜索信息',
+                'analyzing': '分析整合',
+                'writing': '生成报告',
+                'completed': '已完成',
+                'failed': '失败'
+            };
+
+            statusText.textContent = statusMap[data.status] || data.status;
+            stepText.textContent = `${data.current_step} / ${data.total_steps}`;
+
+            const pct = data.total_steps > 0
+                ? (data.current_step / data.total_steps) * 100
+                : 0;
+            progressFill.style.width = pct + '%';
+
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${data.message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+
+            if (data.status === 'completed') {
+                const rd = data.report_data || {};
+                showReport(rd.content || data.message, rd.sources || [], rd.conflicts || []);
+            } else if (data.status === 'failed') {
+                alert('调研失败: ' + data.message);
+            }
+        }
+
+        function showReport(content, sources, conflicts) {
+            const reportCard = document.getElementById('reportCard');
+            const reportContent = document.getElementById('reportContent');
+            const sourcesDiv = document.getElementById('sources');
+            const conflictsDiv = document.getElementById('conflicts');
+
+            reportCard.classList.add('active');
+
+            // 简单的 Markdown 转 HTML（生产环境可用 marked.js）
+            let html = content
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>')
+                .replace(/^\- (.*$)/gim, '<ul><li>$1</li></ul>')
+                .replace(/\n/g, '<br>');
+            // 修复连续的 ul
+            html = html.replace(/<\/ul>\s*<ul>/g, '');
+            reportContent.innerHTML = html;
+
+            // 冲突提示
+            if (conflicts.length > 0) {
+                conflictsDiv.innerHTML = conflicts.map(c => `
+                    <div class="conflict-alert">
+                        <strong>⚠️ 信息冲突检测</strong><br>
+                        ${c.claim_a} vs ${c.claim_b}<br>
+                        <em>分析：${c.analysis}</em>
+                    </div>
+                `).join('');
+            } else {
+                conflictsDiv.innerHTML = '';
+            }
+
+            // 来源列表
+            if (sources.length > 0) {
+                sourcesDiv.innerHTML = '<h3>参考来源</h3>' +
+                    sources.map((s, i) => `
+                        <div class="source-item">
+                            [${i+1}] <a href="${s.url}" target="_blank">${s.title}</a>
+                            ${s.credibility_score ? `(可信度: ${(s.credibility_score*100).toFixed(0)}%)` : ''}
+                        </div>
+                    `).join('');
+            }
+        }
+    </script>
+</body>
+</html>

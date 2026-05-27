@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  # Redis：用于 Celery 消息队列和结果缓存（当前版本预留，后续可扩展异步任务）
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Agent 主服务
+  agent:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://api.moonshot.cn/v1}
+      - LLM_MODEL=${LLM_MODEL:-moonshot-v1-8k}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=false
+    depends_on:
+      - redis
+    volumes:
+      # 挂载 .env 方便修改配置不用重建镜像
+      - ./.env:/app/.env:ro
+
+volumes:
+  redis_data:
